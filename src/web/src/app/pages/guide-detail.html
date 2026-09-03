@@ -1,0 +1,27 @@
+<div class="wrap article">
+  <p><a routerLink="/guides">All guides</a></p>
+  @if (missing()) {
+    <h1>Guide not found</h1>
+  }
+  @if (guide(); as page) {
+    <p class="kicker">{{ page.kicker }}</p>
+    <h1>{{ page.title }}</h1>
+    <p class="lede">{{ page.summary }}</p>
+    <div class="takeaways">
+      <p class="guide-kicker">Takeaways</p>
+      <ul>
+        @for (item of page.takeaways; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </div>
+    @for (section of page.sections; track section.heading) {
+      <h2>{{ section.heading }}</h2>
+      <p>{{ section.body }}</p>
+    }
+    <p class="actions">
+      <a class="btn btn-primary" routerLink="/pay">Run the calculator</a>
+      <a class="btn btn-ghost" routerLink="/checklist">Back to checklist</a>
+    </p>
+  }
+</div>

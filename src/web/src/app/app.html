@@ -1,0 +1,24 @@
+<div class="shell">
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" routerLink="/">
+        <strong>FormJobs</strong>
+        <span>Ireland, first job</span>
+      </a>
+      <nav class="nav">
+        <a routerLink="/pay" routerLinkActive="active">Pay calculator</a>
+        <a routerLink="/checklist" routerLinkActive="active">Arrival checklist</a>
+        <a routerLink="/guides" routerLinkActive="active">Guides</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <router-outlet />
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      FormJobs estimates 2026 Revenue PAYE, USC and PRSI for new employees. It is not tax advice,
+      and it does not file anything with Revenue.
+    </div>
+  </footer>
+</div>

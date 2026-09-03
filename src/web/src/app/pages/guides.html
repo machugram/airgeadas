@@ -1,0 +1,14 @@
+<div class="wrap">
+  <p class="kicker">Library</p>
+  <h1>Guides</h1>
+  <p class="lede">Short briefings for the paperwork around an Irish employment.</p>
+  <div class="grid-2" style="margin-top: 28px">
+    @for (guide of guides(); track guide.slug) {
+      <a class="card" [routerLink]="['/guides', guide.slug]" style="text-decoration: none; color: inherit">
+        <p class="guide-kicker">{{ guide.kicker }}</p>
+        <h3>{{ guide.title }}</h3>
+        <p class="muted">{{ guide.summary }}</p>
+      </a>
+    }
+  </div>
+</div>

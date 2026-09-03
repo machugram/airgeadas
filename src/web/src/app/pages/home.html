@@ -1,0 +1,67 @@
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <p class="kicker">New to Ireland · first job</p>
+      <h1>See the payslip before it lands.</h1>
+      <p class="lede">
+        FormJobs is for people who just accepted an Irish role. It estimates take-home after PAYE,
+        USC, PRSI and pension, and walks the forms that sit around that first payment.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" routerLink="/pay">Open the calculator</a>
+        <a class="btn btn-ghost" routerLink="/checklist">Arrival checklist</a>
+      </div>
+    </div>
+    @if (estimate(); as pay) {
+      <aside class="hero-card">
+        <div class="label">Example · €74,000 · started 6 Aug 2026</div>
+        <div class="figure">{{ pay.firstMonth.net | eur }}</div>
+        <p>
+          First-month take-home after 5% occupational pension. A full month at this rate is
+          {{ pay.fullMonth.net | eur }}.
+        </p>
+      </aside>
+    }
+  </section>
+
+  <section class="grid-3">
+    <article class="card">
+      <p class="guide-kicker">01</p>
+      <h3>The short first month</h3>
+      <p class="muted">
+        Starting after the 1st cuts gross by calendar days. Tax credits for that month often stay
+        whole, so net is not a simple fraction of a full month.
+      </p>
+    </article>
+    <article class="card">
+      <p class="guide-kicker">02</p>
+      <h3>Three statutory slices</h3>
+      <p class="muted">
+        PAYE is income tax after credits. USC is separate and ignores occupational pension. PRSI is
+        social insurance — 4.2% until October 2026, then 4.35%.
+      </p>
+    </article>
+    <article class="card">
+      <p class="guide-kicker">03</p>
+      <h3>Pension is a fork</h3>
+      <p class="muted">
+        A workplace scheme usually means tax relief at 40% on this salary. No scheme means
+        MyFutureFund at 1.5%, taken from net pay.
+      </p>
+    </article>
+  </section>
+
+  <section class="section">
+    <h2>Guides for the first weeks</h2>
+    <p class="muted">PPS number, emergency tax, Revenue myAccount, healthcare.</p>
+    <div class="grid-3" style="margin-top: 20px">
+      @for (guide of guides(); track guide.slug) {
+        <a class="card" [routerLink]="['/guides', guide.slug]" style="text-decoration: none; color: inherit">
+          <p class="guide-kicker">{{ guide.kicker }}</p>
+          <h3>{{ guide.title }}</h3>
+          <p class="muted">{{ guide.summary }}</p>
+        </a>
+      }
+    </div>
+  </section>
+</div>

@@ -1,0 +1,150 @@
+<div class="wrap">
+  <p class="kicker">Calculator</p>
+  <h1>First-month take-home</h1>
+  <p class="lede">
+    2026 Irish PAYE, USC, PRSI and pension. Assumes payroll has a PPS number — not emergency tax.
+  </p>
+
+  <div class="pay-layout" style="margin-top: 32px">
+    <form class="card" [formGroup]="form">
+      <div class="form-grid">
+        <label class="field">
+          Annual salary (€)
+          <input type="number" formControlName="annualSalary" min="0" step="500" />
+        </label>
+        <label class="field">
+          Days after the 1st
+          <input type="number" formControlName="daysAfterFirst" min="0" max="31" />
+        </label>
+        <label class="field">
+          Month
+          <select formControlName="month">
+            @for (name of months; track $index) {
+              <option [ngValue]="$index + 1">{{ name }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          Year
+          <select formControlName="year">
+            <option [ngValue]="2025">2025</option>
+            <option [ngValue]="2026">2026</option>
+            <option [ngValue]="2027">2027</option>
+          </select>
+        </label>
+        <label class="field">
+          Tax status
+          <select formControlName="status">
+            <option value="Single">Single</option>
+            <option value="MarriedOneIncome">Married, one income</option>
+            <option value="SinglePersonChildCarer">Single person child carer</option>
+          </select>
+        </label>
+        <label class="field">
+          Pension
+          <select formControlName="pensionScheme">
+            <option value="Occupational">Occupational (tax relief)</option>
+            <option value="AutoEnrol">MyFutureFund 1.5%</option>
+            <option value="None">No pension</option>
+          </select>
+        </label>
+        @if (form.controls.pensionScheme.value === 'Occupational') {
+          <label class="field">
+            Employee pension %
+            <input type="number" formControlName="occupationalPercent" min="0" max="40" step="0.5" />
+          </label>
+        }
+      </div>
+    </form>
+
+    <div>
+      @if (estimate(); as pay) {
+        <div class="card">
+          <p class="guide-kicker">{{ pay.calendar.monthName }} {{ pay.calendar.year }}</p>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="value">{{ pay.firstMonth.net | eur }}</div>
+              <div class="label">First payslip take-home</div>
+            </div>
+            <div class="stat">
+              <div class="value">{{ pay.fullMonth.net | eur }}</div>
+              <div class="label">Typical full month</div>
+            </div>
+          </div>
+          <div class="bar" style="margin: 20px 0">
+            <span class="net" [style.width.%]="share(pay.firstMonth.gross, pay.firstMonth.net)"></span>
+            <span class="pen" [style.width.%]="share(pay.firstMonth.gross, pay.firstMonth.pension)"></span>
+            <span
+              class="tax"
+              [style.width.%]="
+                share(
+                  pay.firstMonth.gross,
+                  pay.firstMonth.incomeTax + pay.firstMonth.usc + pay.firstMonth.prsi
+                )
+              "
+            ></span>
+          </div>
+          <p class="muted">
+            Started day {{ pay.calendar.startDay }} · {{ pay.calendar.daysWorked }} of
+            {{ pay.calendar.daysInMonth }} calendar days · {{ pay.pension.label }} ·
+            {{ pay.tax.statusLabel }}
+          </p>
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Line</th>
+                <th class="num">First month</th>
+                <th class="num">Full month</th>
+                <th class="num">Full year</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gross</td>
+                <td class="num">{{ pay.firstMonth.gross | eur }}</td>
+                <td class="num">{{ pay.fullMonth.gross | eur }}</td>
+                <td class="num">{{ pay.fullYear.gross | eur }}</td>
+              </tr>
+              <tr>
+                <td>Pension</td>
+                <td class="num">{{ pay.firstMonth.pension | eur }}</td>
+                <td class="num">{{ pay.fullMonth.pension | eur }}</td>
+                <td class="num">{{ pay.fullYear.pension | eur }}</td>
+              </tr>
+              <tr>
+                <td>Income tax (PAYE)</td>
+                <td class="num">{{ pay.firstMonth.incomeTax | eur }}</td>
+                <td class="num">{{ pay.fullMonth.incomeTax | eur }}</td>
+                <td class="num">{{ pay.fullYear.incomeTax | eur }}</td>
+              </tr>
+              <tr>
+                <td>USC</td>
+                <td class="num">{{ pay.firstMonth.usc | eur }}</td>
+                <td class="num">{{ pay.fullMonth.usc | eur }}</td>
+                <td class="num">{{ pay.fullYear.usc | eur }}</td>
+              </tr>
+              <tr>
+                <td>PRSI</td>
+                <td class="num">{{ pay.firstMonth.prsi | eur }}</td>
+                <td class="num">{{ pay.fullMonth.prsi | eur }}</td>
+                <td class="num">{{ pay.fullYear.prsi | eur }}</td>
+              </tr>
+              <tr class="total">
+                <td>Take-home</td>
+                <td class="num">{{ pay.firstMonth.net | eur }}</td>
+                <td class="num">{{ pay.fullMonth.net | eur }}</td>
+                <td class="num">{{ pay.fullYear.net | eur }}</td>
+              </tr>
+            </tbody>
+          </table>
+          @if (pay.pension.scheme === 'AutoEnrol') {
+            <p class="callout">
+              MyFutureFund pot this month: employee {{ pay.firstMonth.pension | eur }}, employer
+              {{ pay.pension.firstMonthEmployer | eur }}, State {{ pay.pension.firstMonthState | eur }}.
+            </p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

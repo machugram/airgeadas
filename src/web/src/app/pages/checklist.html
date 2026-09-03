@@ -1,0 +1,29 @@
+<div class="wrap">
+  <p class="kicker">Arrival</p>
+  <h1>First-month checklist</h1>
+  <p class="lede">
+    {{ completed() }} of {{ items().length }} done. Ticks stay in this browser. None of this is sent
+    to FormJobs or Revenue.
+  </p>
+
+  @for (item of items(); track item.id) {
+    <div class="check-item" [class.done]="done()[item.id]">
+      <input
+        type="checkbox"
+        [id]="'check-' + item.id"
+        [checked]="!!done()[item.id]"
+        (change)="onToggle(item.id, $event)"
+      />
+      <div>
+        <p class="when">{{ item.when }}</p>
+        <h3>
+          <label [attr.for]="'check-' + item.id">{{ item.title }}</label>
+        </h3>
+        <p class="muted">{{ item.detail }}</p>
+        @if (item.guideSlug) {
+          <p><a [routerLink]="['/guides', item.guideSlug]">Read the guide</a></p>
+        }
+      </div>
+    </div>
+  }
+</div>
