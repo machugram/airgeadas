@@ -5,6 +5,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
 })
-export class App {}
+export class App {
+  skipToContent(): void {
+    document.getElementById('content')?.focus();
+  }
+}

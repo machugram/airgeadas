@@ -1,24 +1,26 @@
 <div class="shell">
+  <button type="button" class="skip-link" (click)="skipToContent()">Skip to content</button>
   <header class="site-header">
     <div class="wrap">
       <a class="brand" routerLink="/">
-        <strong>FormJobs</strong>
-        <span>Ireland, first job</span>
+        <strong>Clearplan</strong>
+        <span>Finance planner</span>
       </a>
       <nav class="nav">
-        <a routerLink="/pay" routerLinkActive="active">Pay calculator</a>
-        <a routerLink="/checklist" routerLinkActive="active">Arrival checklist</a>
-        <a routerLink="/guides" routerLinkActive="active">Guides</a>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
+        <a routerLink="/income" routerLinkActive="active">Income</a>
+        <a routerLink="/spending" routerLinkActive="active">Spending</a>
+        <a routerLink="/tools/take-home" routerLinkActive="active">Take-home</a>
       </nav>
     </div>
   </header>
-  <main>
+  <main id="content" tabindex="-1">
     <router-outlet />
   </main>
   <footer class="site-footer">
     <div class="wrap">
-      FormJobs estimates 2026 Revenue PAYE, USC and PRSI for new employees. It is not tax advice,
-      and it does not file anything with Revenue.
+      Slán go fóill (goodbye for now). Clearplan stores your plan in this browser. The Ireland
+      take-home tool is an estimate, not cáin (tax) advice.
     </div>
   </footer>
 </div>

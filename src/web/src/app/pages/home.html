@@ -1,67 +1,139 @@
 <div class="wrap">
   <section class="hero">
     <div>
-      <p class="kicker">New to Ireland · first job</p>
-      <h1>See the payslip before it lands.</h1>
+      <p class="kicker">Finance planner</p>
+      <h1>What comes in, what goes out, what remains.</h1>
       <p class="lede">
-        FormJobs is for people who just accepted an Irish role. It estimates take-home after PAYE,
-        USC, PRSI and pension, and walks the forms that sit around that first payment.
+        Fáilte (welcome). Clearplan is a household airgead (money) plan. Add income from any source
+        and the spending that follows. A typical month is the unit, not a job title.
       </p>
       <div class="actions">
-        <a class="btn btn-primary" routerLink="/pay">Open the calculator</a>
-        <a class="btn btn-ghost" routerLink="/checklist">Arrival checklist</a>
+        <a class="btn btn-primary" routerLink="/income">Add income</a>
+        <a class="btn btn-ghost" routerLink="/spending">Add spending</a>
+        <a class="btn btn-ghost" routerLink="/tools/take-home">Estimate take-home</a>
       </div>
     </div>
-    @if (estimate(); as pay) {
-      <aside class="hero-card">
-        <div class="label">Example · €74,000 · started 6 Aug 2026</div>
-        <div class="figure">{{ pay.firstMonth.net | eur }}</div>
-        <p>
-          First-month take-home after 5% occupational pension. A full month at this rate is
-          {{ pay.fullMonth.net | eur }}.
-        </p>
-      </aside>
-    }
+    <aside class="hero-card">
+      <div class="label">This month, leftover</div>
+      <div class="figure" [class.negative]="planner.leftover() < 0">{{ planner.leftover() | eur }}</div>
+      <p>
+        {{ planner.incomeMonthly() | eur }} in · {{ planner.spendingMonthly() | eur }} out. Figures
+        stay in this browser.
+      </p>
+    </aside>
   </section>
 
   <section class="grid-3">
     <article class="card">
-      <p class="guide-kicker">01</p>
-      <h3>The short first month</h3>
-      <p class="muted">
-        Starting after the 1st cuts gross by calendar days. Tax credits for that month often stay
-        whole, so net is not a simple fraction of a full month.
-      </p>
+      <p class="guide-kicker">Income</p>
+      <h3>{{ planner.incomeMonthly() | eur }}</h3>
+      <p class="muted">Work, freelance, benefits, cíos (rent) received, anything that lands in a month.</p>
+      <p><a routerLink="/income">Manage income</a></p>
     </article>
     <article class="card">
-      <p class="guide-kicker">02</p>
-      <h3>Three statutory slices</h3>
-      <p class="muted">
-        PAYE is income tax after credits. USC is separate and ignores occupational pension. PRSI is
-        social insurance — 4.2% until October 2026, then 4.35%.
-      </p>
+      <p class="guide-kicker">Spending</p>
+      <h3>{{ planner.spendingMonthly() | eur }}</h3>
+      <p class="muted">Cíos (rent), food, bills, savings you treat as spoken for.</p>
+      <p><a routerLink="/spending">Manage spending</a></p>
     </article>
     <article class="card">
-      <p class="guide-kicker">03</p>
-      <h3>Pension is a fork</h3>
+      <p class="guide-kicker">Tool</p>
+      <h3>Take-home estimator</h3>
       <p class="muted">
-        A workplace scheme usually means tax relief at 40% on this salary. No scheme means
-        MyFutureFund at 1.5%, taken from net pay.
+        Irish PAYE for a job offer: year, month, fortnight, week, or hour, with bonus and each
+        deduction as a share of gross. Then drop a typical month into the plan.
       </p>
+      <p><a routerLink="/tools/take-home">Open take-home</a></p>
     </article>
   </section>
 
   <section class="section">
-    <h2>Guides for the first weeks</h2>
-    <p class="muted">PPS number, emergency tax, Revenue myAccount, healthcare.</p>
-    <div class="grid-3" style="margin-top: 20px">
-      @for (guide of guides(); track guide.slug) {
-        <a class="card" [routerLink]="['/guides', guide.slug]" style="text-decoration: none; color: inherit">
-          <p class="guide-kicker">{{ guide.kicker }}</p>
-          <h3>{{ guide.title }}</h3>
-          <p class="muted">{{ guide.summary }}</p>
-        </a>
-      }
+    <h2>Cairt (chart)</h2>
+    <p class="lede">
+      See where a typical month goes. Then split fágtha (leftover) into coigiltis (savings),
+      stocanna (stocks), and the rest.
+    </p>
+    <div class="grid-2 charts" style="margin-top: 24px">
+      <article class="card">
+        <p class="guide-kicker">The month</p>
+        <h3>Where it goes</h3>
+        <p class="muted">Spending by category, with leftover if there is any.</p>
+        <app-pie-chart [slices]="monthSlices()" caption="Where a typical month goes" />
+        @if (planner.leftover() < 0) {
+          <p class="error">This month is short. Cut spending or add income before you plan pots.</p>
+        }
+      </article>
+      <article class="card">
+        <p class="guide-kicker">Fágtha (leftover)</p>
+        <h3>Put it to work</h3>
+        <p class="muted">
+          {{ planner.leftover() | eur }} spare this month. Type what to add, or use a 50 / 30 / 20
+          split: savings, stocks, emergency.
+        </p>
+        @if (planner.leftover() <= 0) {
+          <p class="hint">No spare airgead (money) this month. The month pie still shows where it went.</p>
+        }
+        <app-pie-chart
+          [slices]="leftoverSlices()"
+          caption="Leftover split"
+          empty="No spare airgead (money) to split."
+        />
+        @if (planner.leftover() > 0) {
+          <div class="allocate-list">
+            @for (pot of allocate.pots(); track pot.id) {
+              <label class="field">
+                {{ pot.name }}
+                <input
+                  type="number"
+                  min="0"
+                  step="10"
+                  [value]="pot.amount"
+                  (input)="setPot(pot.id, $event)"
+                />
+              </label>
+            }
+          </div>
+          <p [class.error]="leftoverOver()" [class.muted]="!leftoverOver()">
+            Still unplanned: {{ leftoverRemaining() | eur }}
+            · a year of these pots would be
+            {{ plannedTotal() * 12 | eur }}.
+          </p>
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" (click)="suggestSplit()">
+              Suggest a split
+            </button>
+            <button class="btn btn-primary" type="button" (click)="addPotsToPlan()" [disabled]="!canCommit()">
+              Add pots to the plan
+            </button>
+          </div>
+        }
+      </article>
     </div>
   </section>
+
+  @if (planner.entries().length) {
+    <section class="section">
+      <h2>On the plan</h2>
+      <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th class="num">Per month</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of planner.entries(); track entry.id) {
+            <tr>
+              <td>{{ entry.name }}</td>
+              <td class="muted">{{ entry.kind === 'income' ? 'In' : 'Out' }} · {{ entry.category }}</td>
+              <td class="num">{{ monthlyAmount(entry) | eur }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </section>
+  }
 </div>

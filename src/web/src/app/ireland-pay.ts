@@ -1,4 +1,4 @@
-import { PayEstimate, PayRequest } from './models';
+import { MoneySlice, PayEstimate, PayRequest, TaxCreditLine } from './models';
 
 const MONTH_NAMES = [
   'January',
@@ -21,6 +21,11 @@ const USC_BANDS: { limit: number; rate: number }[] = [
   { limit: 70_044, rate: 0.03 },
   { limit: Number.POSITIVE_INFINITY, rate: 0.08 },
 ];
+
+function finite(value: number | undefined): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
 
 function eur(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -60,9 +65,9 @@ function uscOn(gross: number, scale: number): number {
   let previous = 0;
   for (const band of USC_BANDS) {
     const bandTop = Number.isFinite(band.limit) ? band.limit / scale : Number.POSITIVE_INFINITY;
-    const slice = Math.min(gross, bandTop) - previous;
-    if (slice > 0) {
-      tax += slice * band.rate;
+    const sliceAmount = Math.min(gross, bandTop) - previous;
+    if (sliceAmount > 0) {
+      tax += sliceAmount * band.rate;
     }
     previous = bandTop;
     if (gross <= bandTop) {
@@ -72,26 +77,91 @@ function uscOn(gross: number, scale: number): number {
   return tax;
 }
 
-function profile(status: PayRequest['status']): { cutOff: number; credits: number; label: string } {
-  if (status === 'MarriedOneIncome') {
-    return { cutOff: 53_000, credits: 6_000, label: 'married, one income' };
+function rentCreditAmount(annualRent: number, household: PayRequest['household'], claim: boolean): number {
+  if (!claim || annualRent <= 0) {
+    return 0;
   }
-  if (status === 'SinglePersonChildCarer') {
-    return { cutOff: 48_000, credits: 5_900, label: 'single person child carer' };
-  }
-  return { cutOff: 44_000, credits: 4_000, label: 'single PAYE' };
+  const cap = household === 'Couple' ? 2_000 : 1_000;
+  return eur(Math.min(cap, annualRent * 0.2));
 }
 
-function pensionRate(request: PayRequest): { rate: number; label: string } {
+function taxProfile(request: PayRequest): {
+  cutOff: number;
+  label: string;
+  lines: TaxCreditLine[];
+  credits: number;
+} {
+  const household = request.household ?? 'Single';
+  const earners = request.coupleEarners ?? 'OneIncome';
+  const childCarer = Boolean(request.childCarer) && household === 'Single';
+  const homeCarer = Boolean(request.homeCarer) && household === 'Couple';
+  const age65 = Boolean(request.age65);
+  const monthlyRent = Math.max(0, request.monthlyRent ?? 0);
+  const annualRent = monthlyRent * 12;
+  const claimRent = Boolean(request.claimRentCredit);
+  const potentialRent = rentCreditAmount(annualRent, household, true);
+  const rentCredit = claimRent ? potentialRent : 0;
+
+  let cutOff = 44_000;
+  let personal = 2_000;
+  let label = 'aonair (single), PAYE';
+
+  if (household === 'Couple') {
+    if (homeCarer || earners === 'OneIncome') {
+      cutOff = 53_000;
+      personal = 4_000;
+      label = homeCarer ? 'cúpla (couple), home carer' : 'cúpla (couple), one income';
+    } else {
+      cutOff = 44_000;
+      personal = 2_000;
+      label = 'cúpla (couple), two incomes';
+    }
+  } else if (childCarer) {
+    cutOff = 48_000;
+    label = 'aonair (single), child carer';
+  }
+
+  const payeCredit = 2_000;
+  const childCarerCredit = childCarer ? 1_900 : 0;
+  const homeCarerCredit = homeCarer ? 1_950 : 0;
+  const ageCredit = age65 ? (household === 'Couple' ? 490 : 245) : 0;
+
+  const lines: TaxCreditLine[] = [
+    { id: 'personal', label: 'Personal', amount: personal, included: true },
+    { id: 'paye', label: 'Employee PAYE', amount: payeCredit, included: true },
+    { id: 'rent', label: 'Cíos (rent)', amount: potentialRent, included: claimRent && rentCredit > 0 },
+    { id: 'child', label: 'Single person child carer', amount: childCarerCredit, included: childCarer },
+    { id: 'home', label: 'Home carer', amount: homeCarerCredit, included: homeCarer },
+    { id: 'age', label: 'Age 65+', amount: ageCredit, included: age65 },
+  ];
+
+  const credits = lines.reduce((sum, line) => sum + (line.included ? line.amount : 0), 0);
+  return { cutOff, label, lines, credits };
+}
+
+function pensionRates(request: PayRequest): {
+  employee: number;
+  employer: number;
+  state: number;
+  label: string;
+} {
   if (request.pensionScheme === 'None') {
-    return { rate: 0, label: 'No pension' };
+    return { employee: 0, employer: 0, state: 0, label: 'No pinsin (pension)' };
   }
   if (request.pensionScheme === 'AutoEnrol') {
-    return { rate: 0.015, label: 'MyFutureFund 1.5%' };
+    return { employee: 0.015, employer: 0.015, state: 0.005, label: 'MyFutureFund 1.5%' };
   }
   const percent = clamp(request.occupationalPercent, 0, 40);
-  const label = Number.isInteger(percent) ? String(percent) : percent.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-  return { rate: percent / 100, label: `Occupational ${label}%` };
+  const match = clamp(request.employerMatchPercent ?? 0, 0, 40);
+  const label = Number.isInteger(percent)
+    ? String(percent)
+    : percent.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+  return {
+    employee: percent / 100,
+    employer: match / 100,
+    state: 0,
+    label: `Occupational ${label}%`,
+  };
 }
 
 function employeePrsiRate(year: number, month: number): number {
@@ -110,14 +180,16 @@ function annualPrsiRate(year: number): number {
 
 function slice(
   gross: number,
-  pensionRateValue: number,
+  employeeRate: number,
+  employerRate: number,
   scheme: PayRequest['pensionScheme'],
   srcop: number,
   credits: number,
   uscScale: number,
   prsiRate: number,
 ) {
-  const pension = scheme === 'None' ? 0 : gross * pensionRateValue;
+  const pension = scheme === 'None' ? 0 : gross * employeeRate;
+  const employerPension = scheme === 'None' ? 0 : gross * employerRate;
   const taxable = scheme === 'Occupational' ? Math.max(0, gross - pension) : gross;
   const tax = incomeTax(taxable, srcop, credits);
   const usc = uscOn(gross, uscScale);
@@ -131,6 +203,7 @@ function slice(
   return {
     gross: grossR,
     pension: pensionR,
+    employerPension: eur(employerPension),
     taxable: eur(taxable),
     incomeTax: taxR,
     usc: uscR,
@@ -139,6 +212,30 @@ function slice(
     deductions,
   };
 }
+
+function scaleSlice(slice: MoneySlice, factor: number): MoneySlice {
+  const gross = eur(slice.gross * factor);
+  const pension = eur(slice.pension * factor);
+  const employerPension = eur(slice.employerPension * factor);
+  const taxable = eur(slice.taxable * factor);
+  const incomeTax = eur(slice.incomeTax * factor);
+  const usc = eur(slice.usc * factor);
+  const prsi = eur(slice.prsi * factor);
+  const deductions = eur(pension + incomeTax + usc + prsi);
+  return {
+    gross,
+    pension,
+    employerPension,
+    taxable,
+    incomeTax,
+    usc,
+    prsi,
+    net: eur(gross - deductions),
+    deductions,
+  };
+}
+
+export const STANDARD_WEEK_HOURS = 39;
 
 export function estimatePay(request: PayRequest): PayEstimate {
   const year = request.year;
@@ -150,44 +247,51 @@ export function estimatePay(request: PayRequest): PayEstimate {
   const daysMissed = Math.min(delay, dim);
   const weekdaysInMonth = countWeekdays(year, month, 1, dim);
   const weekdaysWorked = startDay > dim ? 0 : countWeekdays(year, month, startDay, dim);
-  const taxProfile = profile(request.status);
-  const scheme = pensionRate(request);
-  const monthly = request.annualSalary / 12;
-  const firstGross = dim === 0 ? 0 : (monthly * daysWorked) / dim;
+  const tax = taxProfile(request);
+  const scheme = pensionRates(request);
+  const salary = Math.max(0, finite(request.annualSalary));
+  const bonus = Math.max(0, finite(request.annualBonus));
+  const hours = clamp(finite(request.hoursPerWeek) || STANDARD_WEEK_HOURS, 1, 80);
+  const annualGross = salary + bonus;
+  const monthlySalary = salary / 12;
+  const monthly = annualGross / 12;
+  const firstGross = dim === 0 ? 0 : (monthlySalary * daysWorked) / dim;
   const periodPrsi = employeePrsiRate(year, month);
   const annualPrsi = annualPrsiRate(year);
 
   const first = slice(
     firstGross,
-    scheme.rate,
+    scheme.employee,
+    scheme.employer,
     request.pensionScheme,
-    taxProfile.cutOff / 12,
-    taxProfile.credits / 12,
+    tax.cutOff / 12,
+    tax.credits / 12,
     12,
     periodPrsi,
   );
   const full = slice(
     monthly,
-    scheme.rate,
+    scheme.employee,
+    scheme.employer,
     request.pensionScheme,
-    taxProfile.cutOff / 12,
-    taxProfile.credits / 12,
+    tax.cutOff / 12,
+    tax.credits / 12,
     12,
     periodPrsi,
   );
   const yearPay = slice(
-    request.annualSalary,
-    scheme.rate,
+    annualGross,
+    scheme.employee,
+    scheme.employer,
     request.pensionScheme,
-    taxProfile.cutOff,
-    taxProfile.credits,
+    tax.cutOff,
+    tax.credits,
     1,
     annualPrsi,
   );
 
   const remainingMonths = 12 - month;
-  const aeEmployer = request.pensionScheme === 'AutoEnrol' ? eur(firstGross * 0.015) : 0;
-  const aeState = request.pensionScheme === 'AutoEnrol' ? eur(firstGross * 0.005) : 0;
+  const monthlyRent = Math.max(0, request.monthlyRent ?? 0);
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return {
@@ -207,21 +311,39 @@ export function estimatePay(request: PayRequest): PayEstimate {
       startDate: startDay > dim ? null : `${year}-${pad(month)}-${pad(startDay)}`,
     },
     tax: {
-      statusLabel: taxProfile.label,
-      standardRateCutOff: taxProfile.cutOff,
-      taxCredits: taxProfile.credits,
+      statusLabel: tax.label,
+      standardRateCutOff: tax.cutOff,
+      taxCredits: tax.credits,
+      creditLines: tax.lines,
       periodPrsiRate: periodPrsi,
       annualPrsiRate: annualPrsi,
     },
     pension: {
       scheme: request.pensionScheme,
       label: scheme.label,
-      employeeRate: scheme.rate,
-      firstMonthEmployer: aeEmployer,
-      firstMonthState: aeState,
-      firstMonthPot: eur(first.pension + aeEmployer + aeState),
+      employeeRate: scheme.employee,
+      employerRate: scheme.employer,
+      firstMonthEmployer: first.employerPension,
+      fullMonthEmployer: full.employerPension,
+      fullYearEmployer: yearPay.employerPension,
+      firstMonthState: eur(firstGross * scheme.state),
+      firstMonthPot: eur(first.pension + first.employerPension + firstGross * scheme.state),
+    },
+    rent: {
+      monthly: eur(monthlyRent),
+      annual: eur(monthlyRent * 12),
+      credit: tax.lines.find((line) => line.id === 'rent' && line.included)?.amount ?? 0,
     },
     monthlyGross: eur(monthly),
-    restOfCalendarYearGross: eur(firstGross + remainingMonths * monthly),
+    restOfCalendarYearGross: eur(firstGross + remainingMonths * monthlySalary),
+    annualBonus: eur(bonus),
+    hoursPerWeek: hours,
+    periods: {
+      yearly: yearPay,
+      monthly: full,
+      fortnightly: scaleSlice(yearPay, 1 / 26),
+      weekly: scaleSlice(yearPay, 1 / 52),
+      hourly: scaleSlice(yearPay, 1 / (52 * hours)),
+    },
   };
 }

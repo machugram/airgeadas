@@ -1,17 +1,46 @@
 <div class="wrap">
-  <p class="kicker">Calculator</p>
-  <h1>First-month take-home</h1>
+  <p class="kicker">Uirlis (tool)</p>
+  <h1>Ireland take-home</h1>
   <p class="lede">
-    2026 Irish PAYE, USC, PRSI and pension. Assumes payroll has a PPS number — not emergency tax.
+    Fáilte (welcome). Put in gross pay, bonus, pinsin (pension), match, cíos (rent), and the
+    creidmheasanna (credits) you might have. Read the year, month, fortnight, week, or hour, then
+    drop a typical month of tuarastal glan (net pay) into the plan.
   </p>
 
   <div class="pay-layout" style="margin-top: 32px">
-    <form class="card" [formGroup]="form">
+    <form class="card" [formGroup]="form" autocomplete="off">
+      <p class="guide-kicker">Tuarastal (pay)</p>
       <div class="form-grid">
         <label class="field">
-          Annual salary (€)
+          Gross pay, yearly
           <input type="number" formControlName="annualSalary" min="0" step="500" />
         </label>
+        <label class="field">
+          Gross pay, monthly
+          <span class="ga">tuarastal comhlán (gross pay)</span>
+          <input type="number" formControlName="monthlyGross" min="0" step="50" />
+        </label>
+        <label class="field">
+          Annual bonus
+          <span class="ga">bónas bliantúil (annual bonus)</span>
+          <input type="number" formControlName="annualBonus" min="0" step="100" />
+        </label>
+        <label class="field">
+          Show as
+          <select formControlName="frequency">
+            <option value="yearly">Year</option>
+            <option value="monthly">Month</option>
+            <option value="fortnightly">Fortnight</option>
+            <option value="weekly">Week</option>
+            <option value="hourly">Hour</option>
+          </select>
+        </label>
+        @if (form.controls.frequency.value === 'hourly') {
+          <label class="field">
+            Hours in a week
+            <input type="number" formControlName="hoursPerWeek" min="1" max="80" step="0.5" />
+          </label>
+        }
         <label class="field">
           Days after the 1st
           <input type="number" formControlName="daysAfterFirst" min="0" max="31" />
@@ -32,20 +61,36 @@
             <option [ngValue]="2027">2027</option>
           </select>
         </label>
+      </div>
+
+      <p class="guide-kicker" style="margin-top: 22px">Teaghlach (household)</p>
+      <div class="form-grid">
         <label class="field">
-          Tax status
-          <select formControlName="status">
-            <option value="Single">Single</option>
-            <option value="MarriedOneIncome">Married, one income</option>
-            <option value="SinglePersonChildCarer">Single person child carer</option>
+          Household
+          <select formControlName="household">
+            <option value="Single">Aonair (single)</option>
+            <option value="Couple">Cúpla (couple)</option>
           </select>
         </label>
+        @if (form.controls.household.value === 'Couple') {
+          <label class="field">
+            Who earns
+            <select formControlName="coupleEarners">
+              <option value="OneIncome">This job only</option>
+              <option value="TwoIncomes">Two incomes</option>
+            </select>
+          </label>
+        }
+      </div>
+
+      <p class="guide-kicker" style="margin-top: 22px">Pinsin (pension)</p>
+      <div class="form-grid">
         <label class="field">
           Pension
           <select formControlName="pensionScheme">
             <option value="Occupational">Occupational (tax relief)</option>
             <option value="AutoEnrol">MyFutureFund 1.5%</option>
-            <option value="None">No pension</option>
+            <option value="None">No pinsin (pension)</option>
           </select>
         </label>
         @if (form.controls.pensionScheme.value === 'Occupational') {
@@ -53,46 +98,116 @@
             Employee pension %
             <input type="number" formControlName="occupationalPercent" min="0" max="40" step="0.5" />
           </label>
+          <label class="field">
+            Pension match %
+            <span class="ga">comhoiriúnú an fhostóra (employer match)</span>
+            <input type="number" formControlName="employerMatchPercent" min="0" max="40" step="0.5" />
+          </label>
         }
+      </div>
+
+      <p class="guide-kicker" style="margin-top: 22px">Cíos (rent)</p>
+      <div class="form-grid">
+        <label class="field">
+          Monthly rent
+          <span class="ga">cíos in aghaidh na míosa (monthly rent)</span>
+          <input type="number" formControlName="monthlyRent" min="0" step="50" />
+        </label>
+      </div>
+
+      <p class="guide-kicker" style="margin-top: 22px">Creidmheasanna cánach (tax credits)</p>
+      <p class="hint">
+        Possible tax credits. Personal and PAYE sit on every PAYE job. The rest you claim in
+        myAccount.
+      </p>
+      <div class="credit-list">
+        <label class="credit">
+          <input type="checkbox" formControlName="claimRentCredit" />
+          <span>
+            Rent tax credit
+            <span class="ga">cáin cíosa (rent tax credit)</span>
+            <small
+              >20% of yearly cíos (rent), up to €1,000 aonair (single) or €2,000 cúpla (couple).
+              Needs an RTB let.</small
+            >
+          </span>
+        </label>
+        @if (form.controls.household.value === 'Single') {
+          <label class="credit">
+            <input type="checkbox" formControlName="childCarer" />
+            <span>
+              Single person child carer
+              <small>€1,900, and a €48,000 standard-rate cut-off.</small>
+            </span>
+          </label>
+        }
+        @if (form.controls.household.value === 'Couple') {
+          <label class="credit">
+            <input type="checkbox" formControlName="homeCarer" />
+            <span>
+              Home carer
+              <small>€1,950 if one of ye minds a dependent at baile (home). Replaces the two-income band.</small>
+            </span>
+          </label>
+        }
+        <label class="credit">
+          <input type="checkbox" formControlName="age65" />
+          <span>
+            Age 65+
+            <small>€245 aonair (single), €490 cúpla (couple).</small>
+          </span>
+        </label>
       </div>
     </form>
 
     <div>
       @if (estimate(); as pay) {
         <div class="card">
-          <p class="guide-kicker">{{ pay.calendar.monthName }} {{ pay.calendar.year }}</p>
+          <p class="guide-kicker">
+            {{ pay.calendar.monthName }} {{ pay.calendar.year }} · {{ periodLabel() }}
+          </p>
           <div class="stat-row">
             <div class="stat">
-              <div class="value">{{ pay.firstMonth.net | eur }}</div>
-              <div class="label">First payslip take-home</div>
+              <div class="value">{{ shown(pay).gross | eur }}</div>
+              <div class="label">Tuarastal comhlán (gross pay)</div>
             </div>
             <div class="stat">
-              <div class="value">{{ pay.fullMonth.net | eur }}</div>
-              <div class="label">Typical full month</div>
+              <div class="value">{{ shown(pay).net | eur }}</div>
+              <div class="label">Tuarastal glan (net pay)</div>
+            </div>
+            <div class="stat">
+              <div class="value">{{ ofGross(shown(pay).net, shown(pay).gross) }}</div>
+              <div class="label">Kept of gross</div>
+            </div>
+            <div class="stat">
+              <div class="value">{{ ofGross(shown(pay).deductions, shown(pay).gross) }}</div>
+              <div class="label">Deductions of gross</div>
             </div>
           </div>
           <div class="bar" style="margin: 20px 0">
-            <span class="net" [style.width.%]="share(pay.firstMonth.gross, pay.firstMonth.net)"></span>
-            <span class="pen" [style.width.%]="share(pay.firstMonth.gross, pay.firstMonth.pension)"></span>
+            <span class="net" [style.width.%]="share(shown(pay).gross, shown(pay).net)"></span>
+            <span class="pen" [style.width.%]="share(shown(pay).gross, shown(pay).pension)"></span>
             <span
               class="tax"
               [style.width.%]="
-                share(
-                  pay.firstMonth.gross,
-                  pay.firstMonth.incomeTax + pay.firstMonth.usc + pay.firstMonth.prsi
-                )
+                share(shown(pay).gross, shown(pay).incomeTax + shown(pay).usc + shown(pay).prsi)
               "
             ></span>
           </div>
           <p class="muted">
-            Started day {{ pay.calendar.startDay }} · {{ pay.calendar.daysWorked }} of
-            {{ pay.calendar.daysInMonth }} calendar days · {{ pay.pension.label }} ·
-            {{ pay.tax.statusLabel }}
+            First payslip {{ pay.firstMonth.net | eur }} · started day {{ pay.calendar.startDay }} ·
+            {{ pay.calendar.daysWorked }} of {{ pay.calendar.daysInMonth }} days ·
+            {{ pay.pension.label }} · {{ pay.tax.statusLabel }}
+            @if (pay.annualBonus > 0) {
+              · bonus {{ pay.annualBonus | eur }} is in the year, not the first slip
+            }
           </p>
+          <div class="table-scroll">
           <table class="data">
             <thead>
               <tr>
                 <th>Line</th>
+                <th class="num">Of gross</th>
                 <th class="num">First month</th>
                 <th class="num">Full month</th>
                 <th class="num">Full year</th>
@@ -100,49 +215,209 @@
             </thead>
             <tbody>
               <tr>
-                <td>Gross</td>
+                <td>Tuarastal comhlán (gross pay)</td>
+                <td class="num muted">100%</td>
                 <td class="num">{{ pay.firstMonth.gross | eur }}</td>
                 <td class="num">{{ pay.fullMonth.gross | eur }}</td>
                 <td class="num">{{ pay.fullYear.gross | eur }}</td>
               </tr>
               <tr>
-                <td>Pension</td>
+                <td>Pinsin (pension), employee</td>
+                <td class="num muted">{{ ofGross(pay.fullMonth.pension, pay.fullMonth.gross) }}</td>
                 <td class="num">{{ pay.firstMonth.pension | eur }}</td>
                 <td class="num">{{ pay.fullMonth.pension | eur }}</td>
                 <td class="num">{{ pay.fullYear.pension | eur }}</td>
               </tr>
               <tr>
+                <td>Comhoiriúnú (match), employer</td>
+                <td class="num muted">
+                  {{ ofGross(pay.fullMonth.employerPension, pay.fullMonth.gross) }}
+                </td>
+                <td class="num">{{ pay.firstMonth.employerPension | eur }}</td>
+                <td class="num">{{ pay.fullMonth.employerPension | eur }}</td>
+                <td class="num">{{ pay.fullYear.employerPension | eur }}</td>
+              </tr>
+              <tr>
                 <td>Income tax (PAYE)</td>
+                <td class="num muted">{{ ofGross(pay.fullMonth.incomeTax, pay.fullMonth.gross) }}</td>
                 <td class="num">{{ pay.firstMonth.incomeTax | eur }}</td>
                 <td class="num">{{ pay.fullMonth.incomeTax | eur }}</td>
                 <td class="num">{{ pay.fullYear.incomeTax | eur }}</td>
               </tr>
               <tr>
                 <td>USC</td>
+                <td class="num muted">{{ ofGross(pay.fullMonth.usc, pay.fullMonth.gross) }}</td>
                 <td class="num">{{ pay.firstMonth.usc | eur }}</td>
                 <td class="num">{{ pay.fullMonth.usc | eur }}</td>
                 <td class="num">{{ pay.fullYear.usc | eur }}</td>
               </tr>
               <tr>
                 <td>PRSI</td>
+                <td class="num muted">{{ ofGross(pay.fullMonth.prsi, pay.fullMonth.gross) }}</td>
                 <td class="num">{{ pay.firstMonth.prsi | eur }}</td>
                 <td class="num">{{ pay.fullMonth.prsi | eur }}</td>
                 <td class="num">{{ pay.fullYear.prsi | eur }}</td>
               </tr>
               <tr class="total">
-                <td>Take-home</td>
+                <td>Tuarastal glan (net pay)</td>
+                <td class="num">{{ ofGross(pay.fullMonth.net, pay.fullMonth.gross) }}</td>
                 <td class="num">{{ pay.firstMonth.net | eur }}</td>
                 <td class="num">{{ pay.fullMonth.net | eur }}</td>
                 <td class="num">{{ pay.fullYear.net | eur }}</td>
               </tr>
             </tbody>
           </table>
-          @if (pay.pension.scheme === 'AutoEnrol') {
+          </div>
+
+          <p class="guide-kicker" style="margin-top: 22px">By period</p>
+          <p class="hint">
+            Pick a column to show that period above. Year split across 12 months, 26 fortnights, 52
+            weeks, and a {{ pay.hoursPerWeek }}-hour week.
+          </p>
+          <div class="table-scroll">
+          <table class="data period-table">
+            <thead>
+              <tr>
+                <th>Line</th>
+                <th class="num" [class.active]="isFrequency('yearly')">
+                  <button type="button" class="period-btn" (click)="showAs('yearly')">Year</button>
+                </th>
+                <th class="num" [class.active]="isFrequency('monthly')">
+                  <button type="button" class="period-btn" (click)="showAs('monthly')">Month</button>
+                </th>
+                <th class="num" [class.active]="isFrequency('fortnightly')">
+                  <button type="button" class="period-btn" (click)="showAs('fortnightly')">Fortnight</button>
+                </th>
+                <th class="num" [class.active]="isFrequency('weekly')">
+                  <button type="button" class="period-btn" (click)="showAs('weekly')">Week</button>
+                </th>
+                <th class="num" [class.active]="isFrequency('hourly')">
+                  <button type="button" class="period-btn" (click)="showAs('hourly')">Hour</button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gross</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.gross | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.gross | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.gross | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.gross | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.gross | eur }}</td>
+              </tr>
+              <tr>
+                <td>Pinsin (pension)</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.pension | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.pension | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.pension | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.pension | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.pension | eur }}</td>
+              </tr>
+              <tr>
+                <td>PAYE</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.incomeTax | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.incomeTax | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.incomeTax | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.incomeTax | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.incomeTax | eur }}</td>
+              </tr>
+              <tr>
+                <td>USC</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.usc | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.usc | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.usc | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.usc | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.usc | eur }}</td>
+              </tr>
+              <tr>
+                <td>PRSI</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.prsi | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.prsi | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.prsi | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.prsi | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.prsi | eur }}</td>
+              </tr>
+              <tr class="total">
+                <td>Net</td>
+                <td class="num" [class.active]="isFrequency('yearly')">{{ pay.periods.yearly.net | eur }}</td>
+                <td class="num" [class.active]="isFrequency('monthly')">{{ pay.periods.monthly.net | eur }}</td>
+                <td class="num" [class.active]="isFrequency('fortnightly')">{{ pay.periods.fortnightly.net | eur }}</td>
+                <td class="num" [class.active]="isFrequency('weekly')">{{ pay.periods.weekly.net | eur }}</td>
+                <td class="num" [class.active]="isFrequency('hourly')">{{ pay.periods.hourly.net | eur }}</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+
+          <p class="guide-kicker" style="margin-top: 22px">Credits in this estimate</p>
+          <div class="table-scroll">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Creidmheas (credit)</th>
+                <th class="num">Year</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of pay.tax.creditLines; track line.id) {
+                <tr [class.muted]="!line.included">
+                  <td>{{ line.label }}{{ line.included ? '' : ' (off)' }}</td>
+                  <td class="num">{{ line.amount | eur }}</td>
+                </tr>
+              }
+              <tr class="total">
+                <td>Total credits</td>
+                <td class="num">{{ pay.tax.taxCredits | eur }}</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="muted">Standard-rate cut-off {{ pay.tax.standardRateCutOff | eur }} a year.</p>
+
+          @if (pay.pension.employerRate > 0 || pay.pension.firstMonthState > 0) {
             <p class="callout">
-              MyFutureFund pot this month: employee {{ pay.firstMonth.pension | eur }}, employer
-              {{ pay.pension.firstMonthEmployer | eur }}, State {{ pay.pension.firstMonthState | eur }}.
+              @if (pay.pension.firstMonthState > 0) {
+                Pinsin (pension) pot this month: you {{ pay.firstMonth.pension | eur }}, employer match
+                {{ pay.pension.firstMonthEmployer | eur }}, State
+                {{ pay.pension.firstMonthState | eur }}. Match does not come off net pay.
+              } @else {
+                Pinsin (pension) pot this month: you {{ pay.firstMonth.pension | eur }}, employer match
+                {{ pay.pension.firstMonthEmployer | eur }}. Match does not come off net pay.
+              }
             </p>
           }
+          @if (pay.rent.monthly > 0) {
+            <p class="callout">
+              Cíos (rent) {{ pay.rent.monthly | eur }} a month. Rent credit this year
+              {{ pay.rent.credit | eur }}.
+            </p>
+          }
+          <div class="actions">
+            <button
+              class="btn btn-primary"
+              type="button"
+              (click)="addToPlan()"
+              [disabled]="!(pay.fullMonth.net > 0)"
+            >
+              Add typical month to the plan
+            </button>
+            <a class="btn btn-ghost" routerLink="/income">Open income</a>
+          </div>
+          @if (added()) {
+            <p class="callout">
+              Added {{ pay.fullMonth.net | eur }} tuarastal glan (net pay)
+              @if (pay.rent.monthly > 0) {
+                and {{ pay.rent.monthly | eur }} cíos (rent)
+              }
+              to the plan.
+            </p>
+          }
+          <p class="muted" style="margin-top: 16px">
+            Starting a job in Ireland?
+            <a routerLink="/checklist">Arrival checklist</a>
+            ·
+            <a routerLink="/guides">PAYE guides</a>
+          </p>
         </div>
       }
     </div>

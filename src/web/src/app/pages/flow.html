@@ -1,0 +1,80 @@
+<div class="wrap">
+  <p class="kicker">{{ kicker() }}</p>
+  <h1>{{ title() }}</h1>
+  <p class="lede">{{ lede() }}</p>
+
+  <div class="pay-layout" style="margin-top: 32px">
+    <form class="card" [formGroup]="form" (ngSubmit)="add()">
+      <div class="form-grid">
+        <label class="field">
+          Name
+          <input type="text" formControlName="name" placeholder="e.g. Cíos (rent), client work" />
+        </label>
+        <label class="field">
+          Amount (€)
+          <input type="number" formControlName="amount" min="0" step="10" />
+        </label>
+        <label class="field">
+          Repeats
+          <select formControlName="cadence">
+            <option value="weekly">Every week</option>
+            <option value="monthly">Every month</option>
+            <option value="yearly">Every year</option>
+          </select>
+        </label>
+        <label class="field">
+          Category
+          <select formControlName="category">
+            @for (category of categories(); track category) {
+              <option [ngValue]="category">{{ category }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">Add to plan</button>
+      </div>
+    </form>
+
+    <div class="card">
+      <p class="guide-kicker">Monthly equivalent</p>
+      <div class="stat">
+        <div class="value">{{ total() | eur }}</div>
+        <div class="label">{{ title() }} in a typical month</div>
+      </div>
+      @if (!rows().length) {
+        <p class="muted" style="margin-top: 16px">Nothing here yet.</p>
+      } @else {
+        <div class="table-scroll">
+        <table class="data" style="margin-top: 16px">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Cadence</th>
+              <th class="num">Per month</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of rows(); track entry.id) {
+              <tr>
+                <td>
+                  {{ entry.name }}
+                  <div class="muted">{{ entry.category }}</div>
+                </td>
+                <td>{{ entry.amount | eur }} / {{ cadenceLabel(entry.cadence) }}</td>
+                <td class="num">{{ monthlyAmount(entry) | eur }}</td>
+                <td class="num">
+                  <button class="btn btn-ghost btn-tiny" type="button" (click)="remove(entry.id)">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

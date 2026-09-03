@@ -1,0 +1,20 @@
+@if (arcs().length) {
+  <div class="pie-block">
+    <svg class="pie" viewBox="0 0 160 160" role="img" [attr.aria-label]="caption()">
+      @for (arc of arcs(); track arc.slice.label) {
+        <path [attr.d]="arc.d" [attr.fill]="arc.slice.color" fill-rule="evenodd" />
+      }
+    </svg>
+    <ul class="legend">
+      @for (arc of arcs(); track arc.slice.label) {
+        <li>
+          <span class="swatch" [style.background]="arc.slice.color"></span>
+          <span>{{ arc.slice.label }}</span>
+          <span class="muted num">{{ arc.slice.value | eur }} · {{ arc.percent }}%</span>
+        </li>
+      }
+    </ul>
+  </div>
+} @else {
+  <p class="muted">{{ empty() }}</p>
+}

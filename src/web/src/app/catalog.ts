@@ -86,7 +86,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: 'Why net is not just ‘salary ÷ 12 × days’',
-        body: 'Income tax is calculated on taxable pay after occupational pension, against one-twelfth of the annual standard-rate cut-off and one-twelfth of your credits. USC and PRSI are charged on gross. So a short month is not a miniature of a full month in exact proportion — credits can make the first payslip look generous relative to gross, or emergency tax can make it look harsh.',
+        body: 'Income tax is calculated on taxable pay after occupational pension, against one-twelfth of the annual standard-rate cut-off and one-twelfth of your credits. USC and PRSI are charged on gross. So a short month is not a miniature of a full month in exact proportion. Credits can make the first payslip look generous relative to gross, or emergency tax can make it look harsh.',
       },
       {
         heading: 'What to bring to payroll',
@@ -136,7 +136,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: 'MyFutureFund auto-enrol',
-        body: 'If there is no exempt scheme, auto-enrolment applies for eligible employees. In 2026–2028 the employee pays 1.5% of gross (capped at €80,000), the employer matches 1.5%, and the State adds 0.5%. That employee slice comes off net pay — there is no PAYE relief — because the State top-up is the incentive. Rates step up in later years.',
+        body: 'If there is no exempt scheme, auto-enrolment applies for eligible employees. In 2026–2028 the employee pays 1.5% of gross (capped at €80,000), the employer matches 1.5%, and the State adds 0.5%. That employee slice comes off net pay. There is no PAYE relief, because the State top-up is the incentive. Rates step up in later years.',
       },
       {
         heading: 'Ask HR one question',
@@ -157,7 +157,7 @@ export const GUIDES: Guide[] = [
     sections: [
       {
         heading: 'Who issues it',
-        body: 'The Department of Social Protection issues PPS numbers. If you already had one from a previous stay, reuse it — do not apply twice. New arrivals usually apply online or through a registration centre with passport, evidence of why you need the number (contract), and an Irish address.',
+        body: 'The Department of Social Protection issues PPS numbers. If you already had one from a previous stay, reuse it. Do not apply twice. New arrivals usually apply online or through a registration centre with passport, evidence of why you need the number (contract), and an Irish address.',
       },
       {
         heading: 'What waits on it',
@@ -182,7 +182,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: 'Cash in week one',
-        body: 'Budget as if the first payslip might be the harsher version. The FormJobs calculator assumes a PPS number is already with payroll. If it is not, take-home will be lower until Revenue catches up.',
+        body: 'Budget as if the first payslip might be the harsher version. The take-home tool assumes a PPS number is already with payroll. If it is not, net pay will be lower until Revenue catches up.',
       },
     ],
   },
@@ -202,7 +202,7 @@ export const GUIDES: Guide[] = [
         body: 'The certificate tells payroll your standard-rate cut-off and credits. If it still shows a previous job, or no job, PAYE will be wrong. After you start, check that this employer appears.',
       },
       {
-        heading: 'What FormJobs does not file',
+        heading: 'What Clearplan does not file',
         body: 'We do not submit anything to Revenue. Use myAccount for credits (rent, health expenses) and for reviewing your tax at year end. The calculator is a forecast using published 2026 rates.',
       },
     ],
@@ -215,7 +215,7 @@ export const GUIDES: Guide[] = [
       'PRSI is not private health insurance. You still need a GP, and a medical card is a separate means test.',
     takeaways: [
       'Class A PRSI contributes to the social insurance record.',
-      'Register with a GP; many lists are closed — call more than one.',
+      'Register with a GP; many lists are closed. Call more than one.',
       'Private health insurance is optional and not deducted by this calculator.',
     ],
     sections: [

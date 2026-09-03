@@ -4,7 +4,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class EurPipe implements PipeTransform {
   transform(value: number | null | undefined): string {
     if (value == null || Number.isNaN(value)) {
-      return '—';
+      return 'n/a';
     }
     return new Intl.NumberFormat('en-IE', {
       style: 'currency',

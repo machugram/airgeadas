@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/FormJobs.Api/FormJobs.Api.csproj" />
-    <Project Path="src/FormJobs.Core/FormJobs.Core.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/FormJobs.Tests/FormJobs.Tests.csproj" />
-  </Folder>
-</Solution>
